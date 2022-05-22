@@ -1,0 +1,8 @@
+compilation: mpicc -o mpi mpi.c
+execution : mpirun -np <proc_nb> mpi arg0 arg1 ...
+arg0 : la dimension 2 ou 3 
+arg1 : nombre de particule, par exemple 500 
+arg2 : nombre de steps, par exemple entre 500 et 1000
+arg3 : taille du time step, dt , par exemple : 0.1
+
+exemple d'execution : mpirun -np 2 mpi 2 500 500 0.5

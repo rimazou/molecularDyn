@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h> 
-#include 
+#include <mpi.h>
 
 int main ( int argc, char *argv[] );
 void compute ( int np, int nd, double pos[], double vel[],double mass, double f[], double *pot, double *kin );
@@ -47,7 +47,8 @@ int main ( int argc, char *argv[] )
 
 */
 {
-  double *acc;
+  double *acc, *loc_acc;
+  double *box;
   double ctime;
   double dt;
   double e0;
@@ -56,71 +57,50 @@ int main ( int argc, char *argv[] )
   double mass = 1.0;
   int nd;
   int np;
-  double *pos;
-  double potential;
+  double *pos, *loc_pos;
+  double potential, loc_potential;
   int step;
   int step_num;
   int step_print;
   int step_print_index;
   int step_print_num;
-  double *vel;
+  double *vel, *loc_vel;
+  int ierr, myrank, numproc;
+
 
   timestamp ( );
   printf ( "\n" );
   printf ( "MD\n" );
   printf ( "  C version\n" );
   printf ( "  A molecular dynamics program.\n" );
+
 /*
   Get the spatial dimension.
 */
-  if ( 1 < argc )
+   if ( 4 < argc )
   {
     nd = atoi ( argv[1] );
-  }
-  else
-  {
-    printf ( "\n" );
-    printf ( "  Enter ND, the spatial dimension (2 or 3).\n" );
-    scanf ( "%d", &nd );
-  }
+  
 //
 //  Get the number of particles.
 //
-  if ( 2 < argc )
-  {
     np = atoi ( argv[2] );
-  }
-  else
-  {
-    printf ( "\n" );
-    printf ( "  Enter NP, the number of particles (500, for instance).\n" );
-    scanf ( "%d", &np );
-  }
-//
+  
 //  Get the number of time steps.
 //
-  if ( 3 < argc )
-  {
-    step_num = atoi ( argv[3] );
-  }
-  else
-  {
-    printf ( "\n" );
-    printf ( "  Enter ND, the number of time steps (500 or 1000, for instance).\n" );
-    scanf ( "%d", &step_num );
-  }
+  step_num = atoi ( argv[3] );
+  
 //
 //  Get the time steps.
 //
-  if ( 4 < argc )
-  {
     dt = atof ( argv[4] );
+
   }
   else
   {
     printf ( "\n" );
-    printf ( "  Enter DT, the size of the time step (0.1, for instance).\n" );
-    scanf ( "%lf", &dt );
+    printf ( "ERROR, the program needs 4 parameters \n" );
+    return 0 ;
   }
 /*
   Report.
@@ -156,8 +136,10 @@ int main ( int argc, char *argv[] )
   step_print_index = 0;
   step_print_num = 10;
 
-  ctime = cpu_time ( );
 
+
+  ctime = MPI_Wtime(); //cpu_time ( );
+  
   for ( step = 0; step <= step_num; step++ )
   {
     if ( step == 0 )
@@ -198,6 +180,8 @@ int main ( int argc, char *argv[] )
   free ( force );
   free ( pos );
   free ( vel );
+
+  MPI_Finalize();
 /*
   Terminate.
 */
