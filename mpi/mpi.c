@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h> 
-
+#include 
 
 int main ( int argc, char *argv[] );
 void compute ( int np, int nd, double pos[], double vel[],double mass, double f[], double *pot, double *kin );
