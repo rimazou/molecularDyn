@@ -4,15 +4,18 @@
 #include <math.h> 
 #include <mpi.h>
 
+int  myrank, numproc;
+
 int main ( int argc, char *argv[] );
-void compute ( int np, int nd, double pos[], double vel[],double mass, double f[], double *pot, double *kin );
+void compute ( int np, int nd, double pos[], double vel[], double mass,
+double f[], double *pot, double *kin, int myrank, int nbproc );
 double cpu_time ( );
 double dist ( int nd, double r1[], double r2[], double dr[] );
 void initialize ( int np, int nd, double pos[], double vel[], double acc[] );
 void r8mat_uniform_ab ( int m, int n, double a, double b, int *seed, double r[] );
 void timestamp ( );
-void update ( int np, int nd, double pos[], double vel[], double f[], double acc[], double mass, double dt );
-
+void update ( int np, int nd,double loc_pos[], double loc_vel[], double loc_acc[], double pos[], double vel[], double f[],
+  double acc[], double mass, double dt, int myrank, int nbproc );
 /******************************************************************************/
 
 int main ( int argc, char *argv[] )
@@ -48,12 +51,11 @@ int main ( int argc, char *argv[] )
 */
 {
   double *acc, *loc_acc;
-  double *box;
   double ctime;
   double dt;
   double e0;
-  double *force;
-  double kinetic;
+  double *force, *loc_force;
+  double kinetic, loc_kinetic;
   double mass = 1.0;
   int nd;
   int np;
@@ -65,51 +67,58 @@ int main ( int argc, char *argv[] )
   int step_print_index;
   int step_print_num;
   double *vel, *loc_vel;
-  int ierr, myrank, numproc;
-
-
-  timestamp ( );
-  printf ( "\n" );
-  printf ( "MD\n" );
-  printf ( "  C version\n" );
-  printf ( "  A molecular dynamics program.\n" );
 
 /*
-  Get the spatial dimension.
+  MPI initialization and getting number of processes and the rank
 */
-   if ( 4 < argc )
-  {
-    nd = atoi ( argv[1] );
-  
-//
-//  Get the number of particles.
-//
-    np = atoi ( argv[2] );
-  
-//  Get the number of time steps.
-//
-  step_num = atoi ( argv[3] );
-  
-//
-//  Get the time steps.
-//
-    dt = atof ( argv[4] );
+  MPI_Init(NULL, NULL);
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  MPI_Comm_size(MPI_COMM_WORLD, &numproc);
 
-  }
-  else
-  {
+ if (myrank==0){
+
+    timestamp ( );
     printf ( "\n" );
-    printf ( "ERROR, the program needs 4 parameters \n" );
-    return 0 ;
-  }
+    printf ( "MD\n" );
+    printf ( "  C version\n" );
+    printf ( "  A molecular dynamics program.\n" );
+ }
+
+    if ( 4 < argc )
+    {
+      // Get the spatial dimension.
+      nd = atoi ( argv[1] );
+
+      //  Get the number of particles.
+      np = atoi ( argv[2] );
+    
+      //  Get the number of time steps.
+      step_num = atoi ( argv[3] );
+
+      //  Get the time steps.
+      dt = atof ( argv[4] );
+
+    }
+    else
+    {
+      printf ( "\n" );
+      printf ( "ERROR, the program needs 4 parameters \n" );
+      return 0 ;
+    }
 /*
   Report.
 */
+if (myrank==0)
+{
   printf ( "\n" );
   printf ( "  ND, the spatial dimension, is %d\n", nd );
   printf ( "  NP, the number of particles in the simulation, is %d\n", np );
   printf ( "  STEP_NUM, the number of time steps, is %d\n", step_num );
   printf ( "  DT, the size of each time step, is %f\n", dt );
+
+}
+
+  
 /*
   Allocate memory.
 */
@@ -117,11 +126,19 @@ int main ( int argc, char *argv[] )
   force = ( double * ) malloc ( nd * np * sizeof ( double ) );
   pos = ( double * ) malloc ( nd * np * sizeof ( double ) );
   vel = ( double * ) malloc ( nd * np * sizeof ( double ) );
+  loc_acc = ( double * ) malloc ( nd * np * sizeof ( double ) );
+  loc_force = ( double * ) malloc ( nd * np * sizeof ( double ) );
+  loc_pos = ( double * ) malloc ( nd * np * sizeof ( double ) );
+  loc_vel = ( double * ) malloc ( nd * np * sizeof ( double ) );
+
+
 /*
   This is the main time stepping loop:
     Compute forces and energies,
     Update positions, velocities, accelerations.
 */
+if (myrank==0)
+{
   printf ( "\n" );
   printf ( "  At each step, we report the potential and kinetic energies.\n" );
   printf ( "  The sum of these energies should be a constant.\n" );
@@ -132,11 +149,11 @@ int main ( int argc, char *argv[] )
   printf ( "                Energy P        Energy K       Relative Energy Error\n" );
   printf ( "\n" );
 
+ 
+}
   step_print = 0;
   step_print_index = 0;
   step_print_num = 10;
-
-
 
   ctime = MPI_Wtime(); //cpu_time ( );
   
@@ -144,22 +161,34 @@ int main ( int argc, char *argv[] )
   {
     if ( step == 0 )
     {
+         
       initialize ( np, nd, pos, vel, acc );
+    
     }
     else
     {
-      update ( np, nd, pos, vel, force, acc, mass, dt );
+ 
+      update ( np, nd,loc_pos, loc_vel, loc_acc, pos, vel, force, acc, mass, dt, myrank, numproc );
+      MPI_Allreduce(loc_pos,pos, nd*np, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      MPI_Allreduce(loc_vel,vel,nd*np , MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      MPI_Allreduce(loc_acc,acc, nd*np, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
     }
 
-    compute ( np, nd, pos, vel, mass, force, &potential, &kinetic );
+  
+    compute ( np, nd, pos, vel, mass, loc_force, &loc_potential, &loc_kinetic, myrank, numproc);
+    MPI_Allreduce(loc_force,force, nd*np, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&loc_potential,&potential,1 , MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&loc_kinetic,&kinetic, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
 
     if ( step == 0 )
     {
       e0 = potential + kinetic;
     }
-
-    if ( step == step_print )
+    if ( step == step_print && myrank==0)
     {
+  
       printf ( "  %8d  %14f  %14f  %14e\n", step, potential, kinetic,
        ( potential + kinetic - e0 ) / e0 );
       step_print_index = step_print_index + 1;
@@ -167,12 +196,13 @@ int main ( int argc, char *argv[] )
     }
 
   }
+  
 /*
   Report timing.
 */
   ctime = cpu_time ( ) - ctime;
   printf ( "\n" );
-  printf ( "  Elapsed cpu time: %f seconds.\n", ctime );
+  printf ( "  Elapsed cpu time: %f seconds for processus %d.\n", ctime, myrank);
 /*
   Free memory.
 */
@@ -180,11 +210,16 @@ int main ( int argc, char *argv[] )
   free ( force );
   free ( pos );
   free ( vel );
+  free ( loc_acc );
+  free ( loc_force );
+  free ( loc_pos );
+  free ( loc_vel );
 
   MPI_Finalize();
 /*
   Terminate.
 */
+
   printf ( "\n" );
   printf ( "MD\n" );
   printf ( "  Normal end of execution.\n" );
@@ -195,7 +230,7 @@ int main ( int argc, char *argv[] )
 /******************************************************************************/
 
 void compute ( int np, int nd, double pos[], double vel[], double mass,
-  double f[], double *pot, double *kin )
+  double f[], double *pot, double *kin, int myrank, int nbproc )
 
 /******************************************************************************/
 /*
@@ -251,7 +286,7 @@ void compute ( int np, int nd, double pos[], double vel[], double mass,
   pe = 0.0;
   ke = 0.0;
 
-  for ( k = 0; k < np; k++ )
+  for ( k = myrank ; k < np; k+=nbproc )
   {
 /*
   Compute the potential energy and forces.
@@ -386,7 +421,7 @@ void initialize ( int np, int nd, double pos[], double vel[], double acc[] )
   Set positions.
 */
   seed = 123456789;
-  r8mat_uniform_ab ( nd, np, 0.0, 10.0, &seed, pos );
+  r8mat_uniform_ab ( nd, np/numproc, 0.0, 10.0, &seed, pos );
 /*
   Set velocities.
 */
@@ -447,7 +482,6 @@ void r8mat_uniform_ab ( int m, int n, double a, double b, int *seed, double r[] 
   const int i4_huge = 2147483647;
   int j;
   int k;
-
   if ( *seed == 0 )
   {
     fprintf ( stderr, "\n" );
@@ -456,7 +490,7 @@ void r8mat_uniform_ab ( int m, int n, double a, double b, int *seed, double r[] 
     exit ( 1 );
   }
 
-  for ( j = 0; j < n; j++ )
+  for ( j = myrank*n; j < (myrank+1)*n; j++ )
   {
     for ( i = 0; i < m; i++ )
     {
@@ -468,6 +502,7 @@ void r8mat_uniform_ab ( int m, int n, double a, double b, int *seed, double r[] 
       {
         *seed = *seed + i4_huge;
       }
+  
       r[i+j*m] = a + ( b - a ) * ( double ) ( *seed ) * 4.656612875E-10;
     }
   }
@@ -511,8 +546,8 @@ void timestamp ( )
 }
 /******************************************************************************/
 
-void update ( int np, int nd, double pos[], double vel[], double f[],
-  double acc[], double mass, double dt )
+void update ( int np, int nd,double loc_pos[], double loc_vel[], double loc_acc[], double pos[], double vel[], double f[],
+  double acc[], double mass, double dt, int myrank, int nbproc )
 
 /******************************************************************************/
 /*
@@ -556,13 +591,13 @@ void update ( int np, int nd, double pos[], double vel[], double f[],
 
   rmass = 1.0 / mass;
 
-  for ( j = 0; j < np; j++ )
+  for ( j = 0; j < np; j+=nbproc )
   {
     for ( i = 0; i < nd; i++ )
     {
-      pos[i+j*nd] = pos[i+j*nd] + vel[i+j*nd] * dt + 0.5 * acc[i+j*nd] * dt * dt;
-      vel[i+j*nd] = vel[i+j*nd] + 0.5 * dt * ( f[i+j*nd] * rmass + acc[i+j*nd] );
-      acc[i+j*nd] = f[i+j*nd] * rmass;
+      loc_pos[i+j*nd] = pos[i+j*nd] + vel[i+j*nd] * dt + 0.5 * acc[i+j*nd] * dt * dt;
+      loc_vel[i+j*nd] = vel[i+j*nd] + 0.5 * dt * ( f[i+j*nd] * rmass + acc[i+j*nd] );
+      loc_acc[i+j*nd] = f[i+j*nd] * rmass;
     }
   }
 
