@@ -14,8 +14,8 @@ double dist ( int nd, double r1[], double r2[], double dr[] );
 void initialize ( int np, int nd, double pos[], double vel[], double acc[] );
 void r8mat_uniform_ab ( int m, int n, double a, double b, int *seed, double r[] );
 void timestamp ( );
-void update ( int np, int nd,double loc_pos[], double loc_vel[], double loc_acc[], double pos[], double vel[], double f[],
-  double acc[], double mass, double dt, int myrank, int nbproc );
+void update ( int np, int nd,double *loc_pos, double *loc_vel, double *loc_acc, double *pos, double *vel, double *f,
+  double *acc, double mass, double dt, int myrank, int nbproc );
 /******************************************************************************/
 
 int main ( int argc, char *argv[] )
@@ -165,6 +165,7 @@ initialisation de local var
      
     loc_acc[l+ o*nd] = 0.0 ;
     loc_force[l+ o*nd] = 0.0;
+    force[l+ o*nd] = 0.0;
     loc_pos[l+o*nd] = 0.0;
     loc_vel[l+o*nd] = 0.0;
 
@@ -178,24 +179,24 @@ initialisation de local var
     {
          
       initialize ( np, nd, pos, vel, acc );
-    
+      
     }
     else
     {
- 
       update ( np, nd,loc_pos, loc_vel, loc_acc, pos, vel, force, acc, mass, dt, myrank, numproc );
+      
       MPI_Allreduce(loc_pos,pos, nd*np, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       MPI_Allreduce(loc_vel,vel,nd*np , MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       MPI_Allreduce(loc_acc,acc, nd*np, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     }
 
-  
+
     compute ( np, nd, pos, vel, mass, loc_force, &loc_potential, &loc_kinetic, myrank, numproc);
     MPI_Allreduce(loc_force,force, nd*np, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(&loc_potential,&potential,1 , MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(&loc_kinetic,&kinetic, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
+ 
 
     if ( step == 0 )
     {
@@ -350,6 +351,7 @@ void compute ( int np, int nd, double pos[], double vel[], double mass,
   *pot = pe;
   *kin = ke;
 
+
   return;
 }
 /*******************************************************************************/
@@ -436,7 +438,7 @@ void initialize ( int np, int nd, double pos[], double vel[], double acc[] )
   Set positions.
 */
   seed = 123456789;
-  r8mat_uniform_ab ( nd, np/numproc, 0.0, 10.0, &seed, pos );
+  r8mat_uniform_ab ( nd, np, 0.0, 10.0, &seed, pos );
 /*
   Set velocities.
 */
@@ -505,7 +507,7 @@ void r8mat_uniform_ab ( int m, int n, double a, double b, int *seed, double r[] 
     exit ( 1 );
   }
 
-  for ( j = myrank*n; j < (myrank+1)*n; j++ )
+  for ( j = 0; j < n; j++ )
   {
     for ( i = 0; i < m; i++ )
     {
@@ -561,8 +563,8 @@ void timestamp ( )
 }
 /******************************************************************************/
 
-void update ( int np, int nd,double loc_pos[], double loc_vel[], double loc_acc[], double pos[], double vel[], double f[],
-  double acc[], double mass, double dt, int myrank, int nbproc )
+void update ( int np, int nd,double *loc_pos, double *loc_vel, double *loc_acc, double *pos, double *vel, double *f,
+  double *acc, double mass, double dt, int myrank, int nbproc )
 
 /******************************************************************************/
 /*
@@ -615,6 +617,5 @@ void update ( int np, int nd,double loc_pos[], double loc_vel[], double loc_acc[
       loc_acc[i+j*nd] = f[i+j*nd] * rmass;
     }
   }
-
   return;
 }

@@ -8,4 +8,3 @@ arg3 : taille du time step, dt , par exemple : 0.1
 exemple d'execution : mpirun -np 2 mpi 2 500 500 0.5
 
 wsl autorisation to use multiple threads with distributed memory:
- echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
