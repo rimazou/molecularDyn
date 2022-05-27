@@ -151,10 +151,25 @@ if (myrank==0)
 
  
 }
+/*
+initialisation de local var
+*/
   step_print = 0;
   step_print_index = 0;
   step_print_num = 10;
 
+ for (int o = 0; o < np; o++ )
+  {
+    for ( int l = 0; l < nd; l++ )
+    {
+     
+    loc_acc[l+ o*nd] = 0.0 ;
+    loc_force[l+ o*nd] = 0.0;
+    loc_pos[l+o*nd] = 0.0;
+    loc_vel[l+o*nd] = 0.0;
+
+    }
+  }
   ctime = MPI_Wtime(); //cpu_time ( );
   
   for ( step = 0; step <= step_num; step++ )
