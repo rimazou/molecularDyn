@@ -14,8 +14,8 @@ double dist ( int nd, double r1[], double r2[], double dr[] );
 void initialize ( int np, int nd, double pos[], double vel[], double acc[] );
 void r8mat_uniform_ab ( int m, int n, double a, double b, int *seed, double r[] );
 void timestamp ( );
-void update ( int np, int nd,double *loc_pos, double *loc_vel, double *loc_acc, double *pos, double *vel, double *f,
-  double *acc, double mass, double dt, int myrank, int nbproc );
+void update ( int np, int nd,double loc_pos[], double loc_vel[], double loc_acc[], double pos[], double vel[], double f[],
+  double acc[], double mass, double dt, int myrank, int nbproc );
 /******************************************************************************/
 
 int main ( int argc, char *argv[] )
@@ -171,7 +171,7 @@ initialisation de local var
 
     }
   }
-  ctime = MPI_Wtime(); //cpu_time ( );
+  ctime = MPI_Wtime(); 
   
   for ( step = 0; step <= step_num; step++ )
   {
@@ -216,7 +216,7 @@ initialisation de local var
 /*
   Report timing.
 */
-  ctime = cpu_time ( ) - ctime;
+  ctime = MPI_Wtime( ) - ctime;
   printf ( "\n" );
   printf ( "  Elapsed cpu time: %f seconds for processus %d.\n", ctime, myrank);
 /*
@@ -563,8 +563,8 @@ void timestamp ( )
 }
 /******************************************************************************/
 
-void update ( int np, int nd,double *loc_pos, double *loc_vel, double *loc_acc, double *pos, double *vel, double *f,
-  double *acc, double mass, double dt, int myrank, int nbproc )
+void update ( int np, int nd,double loc_pos[], double loc_vel[], double loc_acc[], double pos[], double vel[], double f[],
+  double acc[], double mass, double dt, int myrank, int nbproc )
 
 /******************************************************************************/
 /*
@@ -608,7 +608,7 @@ void update ( int np, int nd,double *loc_pos, double *loc_vel, double *loc_acc, 
 
   rmass = 1.0 / mass;
 
-  for ( j = 0; j < np; j+=nbproc )
+  for ( j = myrank; j < np; j+=nbproc )
   {
     for ( i = 0; i < nd; i++ )
     {
