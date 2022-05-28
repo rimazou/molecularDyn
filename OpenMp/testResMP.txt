@@ -1,0 +1,114 @@
+En variant le nombre de threads (2, 4, 8, 16) pour un nombre de
+particules = 500. Nombre d’itérations = 400.
+ii. En variant la taille des particules (200, 500, 1000) pour un nombre de
+threads= 4. Nombre d’itérations = 400.
+
+
+1 - 
+ Enter ND, the spatial dimension : 3
+
+
+ Enter NP, the number of particles  : 500
+
+
+ Enter step_num, the number of time steps : 400
+
+
+ Enter DT, the size of the time step (0.1, for instance) : 0.1
+
+
+ Enter nbrThreads, the number of threads to use : 2
+
+2 - 
+ Enter ND, the spatial dimension : 3
+
+
+ Enter NP, the number of particles  : 500
+
+
+ Enter step_num, the number of time steps : 400
+
+
+ Enter DT, the size of the time step (0.1, for instance) : 0.1
+
+
+ Enter nbrThreads, the number of threads to use : 4
+ 
+ 3 - 
+ Enter ND, the spatial dimension : 3
+
+
+ Enter NP, the number of particles  : 500
+
+
+ Enter step_num, the number of time steps : 400
+
+
+ Enter DT, the size of the time step (0.1, for instance) : 0.1
+
+
+ Enter nbrThreads, the number of threads to use : 8
+ 
+ 4 - 
+ Enter ND, the spatial dimension : 3
+
+
+ Enter NP, the number of particles  : 500
+
+
+ Enter step_num, the number of time steps : 400
+
+
+ Enter DT, the size of the time step (0.1, for instance) : 0.1
+
+
+ Enter nbrThreads, the number of threads to use : 16
+ 
+ 5-
+  Enter ND, the spatial dimension : 3
+
+
+ Enter NP, the number of particles  : 200
+
+
+ Enter step_num, the number of time steps : 400
+
+
+ Enter DT, the size of the time step (0.1, for instance) : 0.1
+
+
+ Enter nbrThreads, the number of threads to use : 4
+
+ 
+ 6-
+  Enter ND, the spatial dimension : 3
+
+
+ Enter NP, the number of particles  : 500
+
+
+ Enter step_num, the number of time steps : 400
+
+
+ Enter DT, the size of the time step (0.1, for instance) : 0.1
+
+
+ Enter nbrThreads, the number of threads to use : 4
+
+ 
+ 7-
+ 
+  Enter ND, the spatial dimension : 3
+
+
+ Enter NP, the number of particles  : 1000
+
+
+ Enter step_num, the number of time steps : 400
+
+
+ Enter DT, the size of the time step (0.1, for instance) : 0.1
+
+
+ Enter nbrThreads, the number of threads to use : 4
+
