@@ -70,10 +70,6 @@ int main ( int argc, char *argv[] )
   
   proc_num = omp_get_num_procs ( );
 
-
-  printf ( "\n" );
-  printf ( "  Number of processors available = %d\n", omp_get_num_procs ( ) );
-  printf ( "  Maximum number of threads = %d\n", omp_get_max_threads ( ) );
 	/*
 	 Get the spatial dimension.
 	*/
