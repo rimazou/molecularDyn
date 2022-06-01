@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <title>Projet</title>
+</head>
+<body>
+
+
+
+
+
+
+
+  
+
+    <div class="row p-4">
+        <div class="container mt-5 col-6 p-2">
+            <h3>Acceleration en fonction du nombre de threads</h3>
+            <div>
+                <span><p>Le nombre de particules : 500, le nombre d'itérations : 400</p></span>
+                <canvas id="chart_threads"></canvas>
+            </div>
+            <br>
+            <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col">Nombre de thread</th>
+                    <th scope="col">Temps parallele</th>
+                    <th scope="col">Temps séquenciel</th>
+                    <th scope="col">Accéleration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">2</th>
+                    <td>7.475321s</td>
+                    <td>7.136647s</td>
+                    <td>0.9546</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">4</th>
+                    <td>7.502234s</td>
+                    <td>7.136647s</td>
+                    <td>0.9512</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">8</th>
+                    <td>8.267904s</td>
+                    <td>7.136647s</td>
+                    <td>0.8631</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">16</th>
+                    <td>8.155169s</td>
+                    <td>7.136647s</td>
+                    <td>0.8751</td>
+                  </tr>
+                </tbody>
+              </table>
+        </div>
+
+        <div class="container mt-5 col-6 p-2">
+            <h3>Acceleration en fonction du nombre de particules</h3>
+            <div>
+                <span><p> Le nombre de threads : 4, le nombre d'itérations : 400 </p></span>
+                <canvas id="chart_probleme"></canvas>
+            </div>
+            <br>
+            <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col">Nombre de particules</th>
+                    <th scope="col">Temps parallele</th>
+                    <th scope="col">Temps séquenciel</th>
+                    <th scope="col">Accéleration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">200</th>
+                    <td>1.345414s</td>
+                    <td>1.147777s</td>
+                    <td>0.85</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">500</th>
+                    <td>7.384180s</td>
+                    <td>7.136647s</td>
+                    <td>0.96</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">1000</th>
+                    <td>30.716481s</td>
+                    <td>28.681789s</td>
+                    <td>0.93</td>
+                  </tr>
+                </tbody>
+              </table>
+        </div>
+    </div>
+    
+
+    <script src="bootstrap.bundle.min.js"></script>
+    <script src="chart.js"></script>
+    <script >
+
+        const labels_threads = [
+            '2',
+            '4',
+            '8',
+            '16',
+        ];
+
+        const labels_probleme = [
+            '200',
+            '500',
+            '1000',
+      
+        ];
+
+        const data_threads = {
+            labels: labels_threads,
+            datasets: [{
+            label: 'Acceleration',
+            backgroundColor: 'rgb(237, 0, 36)',
+            borderColor: 'rgb(237, 0, 36)',
+            data: [0.9546, 0.9512, 0.8631 ,0.8751],
+            }]
+        };
+
+        const data_probleme = {
+            labels: labels_probleme,
+            datasets: [{
+            label: 'Acceleration',
+            backgroundColor: 'rgb(237, 0, 36)',
+            borderColor: 'rgb(237, 0, 36)',
+            data: [0.85, 0.96, 0.93],
+            }]
+        };
+
+        const config_threads = {
+            type: 'line',
+            data: data_threads,
+            options: {}
+        };
+
+        const config_probleme = {
+            type: 'line',
+            data: data_probleme,
+            options: {}
+        };
+
+        let chart_threads = new Chart(
+            document.getElementById('chart_threads'),
+            config_threads
+        );
+
+        let chart_probleme = new Chart(
+            document.getElementById('chart_probleme'),
+            config_probleme
+        );
+
+    </script>
+
+
+
+</body>
+</html>
