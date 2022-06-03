@@ -581,6 +581,7 @@ void update ( int np, int nd, double pos[], double vel[], double f[],
 
   for ( j = 0; j < np; j++ )
   {
+    # pragma parallel omp for
     for ( i = 0; i < nd; i++ )
     {
       pos[i+j*nd] = pos[i+j*nd] + vel[i+j*nd] * dt + 0.5 * acc[i+j*nd] * dt * dt;
